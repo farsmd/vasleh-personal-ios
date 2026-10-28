@@ -1,0 +1,36 @@
+# بیلد ابری اپ iOS وصله روی مک گیت‌هاب — بدون نیاز به مک شخصی.
+# این ورک‌فلو فقط برای شبیه‌ساز (Simulator) بیلد می‌گیرد و نیازی به حساب
+# توسعه‌دهندهٔ اپل یا هیچ رازی ندارد؛ امضا با CODE_SIGNING_ALLOWED=NO خاموش است.
+# خروجی، فایل .app شبیه‌ساز است که روی آیفون واقعی نصب نمی‌شود؛
+# فقط ثابت می‌کند کد در Xcode واقعی کامپایل می‌شود.
+# برای نصب روی آیفون واقعی، CLOUD-BUILD.md را ببین (مسیر امضاشده یا سایدلود).
+name: iOS Simulator Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app || xcode-select -p
+      - name: Build for iOS Simulator (no signing)
+        run: |
+          xcodebuild build \
+            -project VaslehPersonal.xcodeproj \
+            -scheme VaslehPersonal \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Upload simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: VaslehPersonal-simulator-app
+          path: ~/Library/Developer/Xcode/DerivedData/VaslehPersonal-*/Build/Products/Debug-iphonesimulator/VaslehPersonal.app
+          if-no-files-found: error
+          retention-days: 14
